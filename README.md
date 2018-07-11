@@ -2,6 +2,8 @@
 
 Multi-threaded sharejs benchmark for text document inserts.
 
+Not particularly comprehensive or scientific, but it's better than nothing :)
+
 ## Usage
 
 Clone the repo and `cd` into it.
