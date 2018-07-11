@@ -70,5 +70,5 @@ fn main() {
 
   println!("\n------------------");
   println!("Total reqs: {:?}", requests);
-  println!("Time taken: {:?}s", time_taken);
+  println!("Time taken: {:.2}s", time_taken);
 }
