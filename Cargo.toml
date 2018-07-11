@@ -7,4 +7,3 @@ authors = ["nickbrowne <nickbrowne@users.noreply.github.com>"]
 curl = "0.4.12"
 rand = "0.5.3"
 time = "0.1.40"
-termion = "1.5.1"

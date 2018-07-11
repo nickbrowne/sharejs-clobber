@@ -1,5 +1,4 @@
 extern crate rand;
-extern crate termion;
 extern crate time;
 
 mod doc;
@@ -7,10 +6,8 @@ mod doc;
 use doc::Doc;
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
-use std::io::{Write, stdout};
 use std::sync::mpsc::{channel};
 use std::thread;
-use termion::raw::IntoRawMode;
 
 const CONCURRENCY: usize = 4;
 
@@ -48,8 +45,6 @@ fn main() {
   println!("Clobbering sharejs!");
   println!("------------------");
 
-  let mut stdout = stdout().into_raw_mode().unwrap();
-
   let mut rx_iter = rx.iter();
 
   while let Some(result) = rx_iter.next() {
@@ -59,11 +54,8 @@ fn main() {
     requests = requests + result;
 
     let rps = requests as f64 / elapsed_time;
-    write!(stdout, "\rRPS: {:.2} RPM: {:.2}", rps, rps * 60.0).unwrap();
+    print!("\rRPS: {:.2} RPM: {:.2}", rps, rps * 60.0);
   }
-
-  // get us out of raw mode
-  drop(stdout);
 
   let end_time = time::precise_time_s();
   let time_taken = end_time - start_time;
