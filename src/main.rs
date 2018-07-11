@@ -1,9 +1,10 @@
-extern crate curl;
 extern crate rand;
 extern crate termion;
 extern crate time;
 
-use curl::easy::Easy;
+mod doc;
+
+use doc::Doc;
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 use std::io::{Write, stdout};
@@ -11,44 +12,7 @@ use std::sync::mpsc::{channel};
 use std::thread;
 use termion::raw::IntoRawMode;
 
-const CONCURRENCY: usize = 2;
-
-fn create_document(easy: &mut Easy, uid: &String) {
-  use std::io::Read;
-
-  let url = format!("http://localhost:9000/doc/{}", uid);
-  let mut data = "{\"type\":\"text\"}".as_bytes();
-
-  easy.url(&url).expect(&format!("Possible bad url: {:?}", url));
-  easy.put(true).unwrap();
-
-  let mut transfer = easy.transfer();
-  transfer.read_function(|buffer| {
-    Ok(data.read(buffer).unwrap_or(0))
-  }).expect("Failed to read buffer");
-
-  transfer.perform().expect("Failed to transfer data");
-}
-
-fn insert(easy: &mut Easy, uid: &String, v: i32, text: &str) {
-  use std::io::Read;
-
-  let url = format!("http://localhost:9000/doc/{}?v={}", uid, v);
-  let data = format!("[{{\"i\":{:?},\"p\":0}}]", text);
-
-  let mut data = data.as_bytes();
-
-  easy.url(&url).expect(&format!("Possible bad url: {:?}", url));
-  easy.post(true).unwrap();
-  easy.post_field_size(data.len() as u64).unwrap();
-
-  let mut transfer = easy.transfer();
-  transfer.read_function(|buffer| {
-    Ok(data.read(buffer).unwrap_or(0))
-  }).expect("Failed to read buffer");
-
-  transfer.perform().expect("Failed to transfer data");
-}
+const CONCURRENCY: usize = 4;
 
 fn random_alpha() -> String {
   thread_rng().sample_iter(&Alphanumeric).take(16).collect()
@@ -65,15 +29,11 @@ fn main() {
     let thread_tx = tx.clone();
 
     thread::spawn(move || {
-      let mut easy = Easy::new();
-
-      create_document(&mut easy, &uid);
-      easy.reset();
+      let doc = Doc::new(uid);
+      doc.create();
 
       for v in 0..1000 {
-        insert(&mut easy, &uid, v, "hello from rust\n");
-        easy.reset();
-
+        doc.insert(v, "hello from rust\n");
         thread_tx.send(1).expect("Receiver died");
       }
     });
