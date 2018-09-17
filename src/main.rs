@@ -1,5 +1,9 @@
 extern crate rand;
 extern crate time;
+extern crate ws;
+
+#[macro_use]
+extern crate serde_json;
 
 mod doc;
 
@@ -8,6 +12,7 @@ use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
 use std::sync::mpsc::{channel};
 use std::thread;
+use ws::{connect, CloseCode};
 
 const CONCURRENCY: usize = 4;
 
@@ -26,13 +31,9 @@ fn main() {
     let thread_tx = tx.clone();
 
     thread::spawn(move || {
-      let doc = Doc::new(uid);
-      doc.create();
-
-      for v in 0..1000 {
-        doc.insert(v, "hello from rust\n");
-        thread_tx.send(1).expect("Receiver died");
-      }
+      connect("ws://localhost/websocket", |out| {
+        Doc::new(&uid, out, thread_tx.clone())
+      }).expect("Failed to connect to server");
     });
   }
 
